@@ -2,6 +2,18 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
+        <PackageId>pdouelle.Blueprints.ControllerBase</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Philippe DOUELLE</Authors>
+        <Company>BETTERIT</Company>
+        <RootNamespace>pdouelle.Blueprints.ControllerBase</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.10" />
+      <PackageReference Include="Microsoft.Identity.Web" Version="1.18.0" />
+      <PackageReference Include="pdouelle.Blueprints.MediatR" Version="1.0.0" />
+    </ItemGroup>
 
 </Project>
