@@ -51,10 +51,7 @@ namespace pdouelle.Blueprints.ControllerBase
             where TEntity : IEntity
             where TQueryList : IPagination, ISort
         {
-            PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>
-            {
-                Request = request
-            }, cancellationToken);
+            PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>(request), cancellationToken);
             
             var metadata = new
             {
@@ -84,10 +81,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [NonAction]
         protected virtual async Task<IActionResult> GetByIdAsync<TEntity, TDto>(Guid id, CancellationToken cancellationToken)
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
-            {
-                Id = id
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
@@ -103,23 +97,20 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <summary>
         /// Get single by id
         /// </summary>
-        /// <param name="model"></param>
+        /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle request, CancellationToken cancellationToken)
             where TQuerySingle : IEntity
         {
-            TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>
-            {
-                Request = model
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>(request), cancellationToken);
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(model.Id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new EntityNotFound(request.Id, typeof(TEntity)));
                 return NotFound();
             }
 
@@ -139,10 +130,7 @@ namespace pdouelle.Blueprints.ControllerBase
         {
             var request = _mapper.Map<TEntity>(model);
 
-            TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>
-            {
-                Entity = request
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>(request), cancellationToken);
 
             await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
@@ -163,10 +151,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [NonAction]
         protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken)
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
-            {
-                Id = id
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
@@ -176,10 +161,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             _mapper.Map(model, entity);
 
-            await _mediator.Send(new UpdateCommandModel<TEntity>
-            {
-                Entity = entity
-            }, cancellationToken);
+            await _mediator.Send(new UpdateCommandModel<TEntity>(entity), cancellationToken);
 
             await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
@@ -201,10 +183,7 @@ namespace pdouelle.Blueprints.ControllerBase
         protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patch, CancellationToken cancellationToken)
             where TPatch : class, new()
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
-            {
-                Id = id
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
@@ -216,10 +195,7 @@ namespace pdouelle.Blueprints.ControllerBase
             patch.ApplyTo(entityCopy);
             _mapper.Map(entityCopy, entity);
 
-            await _mediator.Send(new UpdateCommandModel<TEntity>
-            {
-                Entity = entity,
-            }, cancellationToken);
+            await _mediator.Send(new UpdateCommandModel<TEntity>(entity), cancellationToken);
 
             await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
@@ -239,10 +215,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [NonAction]
         protected virtual async Task<IActionResult> DeleteAsync<TEntity>(Guid id, CancellationToken cancellationToken)
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
-            {
-                Id = id
-            }, cancellationToken);
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
@@ -250,10 +223,7 @@ namespace pdouelle.Blueprints.ControllerBase
                 return NotFound();
             }
 
-            await _mediator.Send(new DeleteCommandModel<TEntity>
-            {
-                Entity = entity,
-            }, cancellationToken);
+            await _mediator.Send(new DeleteCommandModel<TEntity>(entity), cancellationToken);
 
             await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 

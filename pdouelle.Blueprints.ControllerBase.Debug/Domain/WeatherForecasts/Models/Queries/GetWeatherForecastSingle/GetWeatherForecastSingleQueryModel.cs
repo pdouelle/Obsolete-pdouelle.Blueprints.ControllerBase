@@ -7,7 +7,7 @@ using pdouelle.Sort;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle
 {
-    public class GetWeatherForecastSingleQueryModel : IEntity, ISort
+    public class GetWeatherForecastSingleQueryModel : IEntity
     {
         [Where(Name = nameof(WeatherForecast.Id))]
         [FromRoute]
@@ -15,7 +15,5 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Model
 
         [Include(Name = nameof(WeatherForecast.ChildEntity))]
         public bool IncludeChildEntities { get; set; }
-        
-        public string Sort { get; set; }
     }
 }
