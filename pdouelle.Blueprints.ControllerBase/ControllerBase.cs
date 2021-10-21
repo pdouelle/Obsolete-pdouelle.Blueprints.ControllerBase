@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Ardalis.GuardClauses;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -11,31 +12,32 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using pdouelle.Blueprints.MediatR.Models.Commands.Create;
 using pdouelle.Blueprints.MediatR.Models.Commands.Delete;
-using pdouelle.Blueprints.MediatR.Models.Commands.Patch;
 using pdouelle.Blueprints.MediatR.Models.Commands.Save;
 using pdouelle.Blueprints.MediatR.Models.Commands.Update;
 using pdouelle.Blueprints.MediatR.Models.Queries.IdQuery;
 using pdouelle.Blueprints.MediatR.Models.Queries.ListQuery;
+using pdouelle.Blueprints.MediatR.Models.Queries.SingleQuery;
 using pdouelle.Entity;
 using pdouelle.Pagination;
 using pdouelle.Sort;
 
 namespace pdouelle.Blueprints.ControllerBase
 {
-    public class ControllerBase<TEntity, TDto, TQueryById> : Microsoft.AspNetCore.Mvc.ControllerBase 
-        where TEntity : IEntity
-        where TDto : IEntity
-        where TQueryById : IEntity, new() 
+    public class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
     {
-        protected readonly IMediator Mediator;
-        protected readonly IMapper Mapper;
-        protected readonly ILogger Logger;
+        private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
+        private readonly ILogger _logger;
 
         public ControllerBase(IMediator mediator, IMapper mapper, ILogger logger)
         {
-            Mediator = mediator;
-            Mapper = mapper;
-            Logger = logger;
+            Guard.Against.Null(mediator, nameof(mediator));
+            Guard.Against.Null(mapper, nameof(mapper));
+            Guard.Against.Null(logger, nameof(logger));
+            
+            _mediator = mediator;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         /// <summary>
@@ -43,184 +45,179 @@ namespace pdouelle.Blueprints.ControllerBase
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public virtual async Task<IActionResult> GetList<TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken) where TQueryList : IPagination, ISort
+        [NonAction]
+        public virtual async Task<IActionResult> GetAsync<TEntity, TDto, TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken) 
+            where TEntity : IEntity
+            where TQueryList : IPagination, ISort 
         {
-            PagedList<TEntity> response = await Mediator.Send(new ListQueryModel<TEntity, TQueryList>
+            PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>
             {
                 Request = request
             }, cancellationToken);
-            
+
             var metadata = new
             {
-                response.TotalCount,
-                response.PageSize,
-                response.CurrentPage,
-                response.TotalPages,
-                response.HasNext,
-                response.HasPrevious
+                entities.TotalCount,
+                entities.PageSize,
+                entities.CurrentPage,
+                entities.TotalPages,
+                entities.HasNext,
+                entities.HasPrevious
             };
-            
+
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-            var mappedResponse = Mapper.Map<IEnumerable<TDto>>(response);
+            var entitiesDto = _mapper.Map<IEnumerable<TDto>>(entities);
 
-            return Ok(mappedResponse);
+            return Ok(entitiesDto);
         }
 
         /// <summary>
         /// Get by id
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="id"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<IActionResult> GetById([FromQuery] TQueryById request, CancellationToken cancellationToken)
+        [NonAction]
+        public virtual async Task<IActionResult> GetByIdAsync<TEntity, TDto>(Guid id, CancellationToken cancellationToken)
         {
-            TEntity response = await Mediator.Send(new IdQueryModel<TEntity, TQueryById>
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
             {
-                Request = request
+                Id = id
             }, cancellationToken);
 
-            if (response is null)
+            if (entity is null)
             {
-                Logger.LogInformation("NOT FOUND | request: {@Request}", request);
+                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
                 return NotFound();
             }
 
-            var mappedResponse = Mapper.Map<TDto>(response);
+            var entityDto = _mapper.Map<TDto>(entity);
 
-            return Ok(mappedResponse);
+            return Ok(entityDto);
         }
-        
+
+        /// <summary>
+        /// Get single by id
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [NonAction]
+        public virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle model, CancellationToken cancellationToken) 
+            where TQuerySingle : IEntity, ISort
+        {
+            TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>
+            {
+                Request = model
+            }, cancellationToken);
+
+            if (entity is null)
+            {
+                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), model.Id);
+                return NotFound();
+            }
+
+            var entityDto = _mapper.Map<TDto>(entity);
+
+            return Ok(entityDto);
+        }
+
         /// <summary>
         /// Create
         /// </summary>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public virtual async Task<IActionResult> Create<TCreate>([FromBody] TCreate request, CancellationToken cancellationToken)
+        [NonAction]
+        public virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
+            where TDto : IEntity
         {
-            TEntity entity = await Mediator.Send(new CreateCommandModel<TEntity, TCreate>
-            {
-                Request = request
-            }, cancellationToken);
-
-            await Mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
-
-            var mappedResponse = Mapper.Map<TDto>(entity);
-
-            return CreatedAtAction(nameof(GetById), new {id = mappedResponse.Id}, mappedResponse);
-        }
-
-        /// <summary>
-        /// Update
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="request"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<IActionResult> Update<TUpdate>(Guid id, [FromBody] TUpdate request, CancellationToken cancellationToken) 
-            where TUpdate : IEntity
-        {
-            request.Id = id;
+            var request = _mapper.Map<TEntity>(model);
             
-            TEntity entity = await Mediator.Send(new IdQueryModel<TEntity, TQueryById>
+            TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>
             {
-                Request = new TQueryById {Id = request.Id}
+                Entity = request
             }, cancellationToken);
 
-            if (entity is null)
-            {
-                Logger.LogInformation("NOT FOUND | request: {@Request}", request);
-                return NotFound();
-            }
+            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
-            await Mediator.Send(new UpdateCommandModel<TEntity, TUpdate>
-            {
-                Entity = entity,
-                Request = request
-            }, cancellationToken);
+            var entityDto = _mapper.Map<TDto>(entity);
 
-            await Mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
-
-            var mappedResponse = Mapper.Map<TDto>(entity);
-
-            return Ok(mappedResponse);
+            return Created($"{HttpContext.Request.Path}/{entityDto.Id}", entityDto);
         }
 
         /// <summary>
         /// Patch
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="patchDocument"></param>
+        /// <param name="patch"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<IActionResult> Patch<TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patchDocument, CancellationToken cancellationToken)
+        [NonAction]
+        public virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patch, CancellationToken cancellationToken)
             where TPatch : class, new()
         {
-            var request = new TPatch();
-            patchDocument.ApplyTo(request);
-            
-            TEntity entity = await Mediator.Send(new IdQueryModel<TEntity, TQueryById>
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
             {
-                Request = new TQueryById {Id = id}
+                Id = id
             }, cancellationToken);
 
             if (entity is null)
             {
-                Logger.LogInformation("NOT FOUND | request: {@Request}", request);
+                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
                 return NotFound();
             }
-
-            TEntity response = await Mediator.Send(new PatchCommandModel<TEntity, TPatch>
+            
+            var entityCopy = _mapper.Map<TPatch>(entity);
+            patch.ApplyTo(entityCopy);
+            _mapper.Map(entityCopy, entity);
+            
+            await _mediator.Send(new UpdateCommandModel<TEntity>
             {
                 Entity = entity,
-                Request = request
             }, cancellationToken);
 
-            await Mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
-            var mappedResponse = Mapper.Map<TDto>(response);
+            var entityDto = _mapper.Map<TDto>(entity);
 
-            return Ok(mappedResponse);
+            return Ok(entityDto);
         }
 
         /// <summary>
         /// Delete
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="request"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<IActionResult> Delete<TDelete>(Guid id, [FromQuery] TDelete request, CancellationToken cancellationToken)
-            where TDelete : IEntity
+        [NonAction]
+        public virtual async Task<IActionResult> DeleteAsync<TEntity>(Guid id, CancellationToken cancellationToken)
         {
-            request.Id = id;
-            
-            TEntity entity = await Mediator.Send(new IdQueryModel<TEntity, TQueryById>
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
             {
-                Request = new TQueryById {Id = request.Id}
+                Id = id
             }, cancellationToken);
 
             if (entity is null)
             {
-                Logger.LogInformation("NOT FOUND | request: {@Request}", request);
+                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
                 return NotFound();
             }
 
-            await Mediator.Send(new DeleteCommandModel<TEntity, TDelete>
+            await _mediator.Send(new DeleteCommandModel<TEntity>
             {
                 Entity = entity,
-                Request = request
             }, cancellationToken);
 
-            await Mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
 
             return NoContent();
         }
