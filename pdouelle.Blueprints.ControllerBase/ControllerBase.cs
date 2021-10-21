@@ -55,7 +55,7 @@ namespace pdouelle.Blueprints.ControllerBase
             {
                 Request = request
             }, cancellationToken);
-
+            
             var metadata = new
             {
                 entities.TotalCount,
@@ -110,7 +110,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
         protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle model, CancellationToken cancellationToken)
-            where TQuerySingle : IEntity, ISort
+            where TQuerySingle : IEntity
         {
             TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>
             {
