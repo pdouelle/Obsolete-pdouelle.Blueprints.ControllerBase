@@ -1,6 +1,8 @@
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug
 {
@@ -14,6 +16,10 @@ namespace pdouelle.Blueprints.ControllerBase.Debug
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Debug);
+                })
                 .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

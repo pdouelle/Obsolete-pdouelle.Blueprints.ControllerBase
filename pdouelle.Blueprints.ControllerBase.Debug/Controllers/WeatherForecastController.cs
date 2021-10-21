@@ -17,6 +17,7 @@ using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Entities;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.CreateWeatherForecast;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.PatchWeatherForecast;
+using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.UpdateWeatherForecast;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastList;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle;
 
@@ -50,6 +51,12 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
         public async Task<IActionResult> PostAsync([FromBody] CreateWeatherForecastCommandModel model, CancellationToken cancellationToken)
         {
             return await base.PostAsync<WeatherForecast, WeatherForecastDto, CreateWeatherForecastCommandModel>(model, cancellationToken);
+        }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutAsync(Guid id, [FromBody] UpdateWeatherForecastCommandModel model, CancellationToken cancellationToken)
+        {
+            return await base.PutAsync<WeatherForecast, WeatherForecastDto, UpdateWeatherForecastCommandModel>(id, model, cancellationToken);
         }
 
         [HttpPatch("{id}")]

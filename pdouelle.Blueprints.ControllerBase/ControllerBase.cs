@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using pdouelle.Blueprints.ControllerBase.Errors;
 using pdouelle.Blueprints.MediatR.Models.Commands.Create;
 using pdouelle.Blueprints.MediatR.Models.Commands.Delete;
 using pdouelle.Blueprints.MediatR.Models.Commands.Save;
@@ -34,7 +35,7 @@ namespace pdouelle.Blueprints.ControllerBase
             Guard.Against.Null(mediator, nameof(mediator));
             Guard.Against.Null(mapper, nameof(mapper));
             Guard.Against.Null(logger, nameof(logger));
-            
+
             _mediator = mediator;
             _mapper = mapper;
             _logger = logger;
@@ -46,9 +47,9 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [NonAction]
-        public virtual async Task<IActionResult> GetAsync<TEntity, TDto, TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken) 
+        protected virtual async Task<IActionResult> GetAsync<TEntity, TDto, TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken)
             where TEntity : IEntity
-            where TQueryList : IPagination, ISort 
+            where TQueryList : IPagination, ISort
         {
             PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>
             {
@@ -81,7 +82,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        public virtual async Task<IActionResult> GetByIdAsync<TEntity, TDto>(Guid id, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> GetByIdAsync<TEntity, TDto>(Guid id, CancellationToken cancellationToken)
         {
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
             {
@@ -90,7 +91,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
+                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
                 return NotFound();
             }
 
@@ -108,7 +109,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        public virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle model, CancellationToken cancellationToken) 
+        protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle model, CancellationToken cancellationToken)
             where TQuerySingle : IEntity, ISort
         {
             TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>
@@ -118,7 +119,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), model.Id);
+                _logger.LogInformation("{@Message}", new EntityNotFound(model.Id, typeof(TEntity)));
                 return NotFound();
             }
 
@@ -133,11 +134,11 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [NonAction]
-        public virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
             where TDto : IEntity
         {
             var request = _mapper.Map<TEntity>(model);
-            
+
             TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>
             {
                 Entity = request
@@ -151,6 +152,43 @@ namespace pdouelle.Blueprints.ControllerBase
         }
 
         /// <summary>
+        /// Update
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="model"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [NonAction]
+        protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken)
+        {
+            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
+            {
+                Id = id
+            }, cancellationToken);
+
+            if (entity is null)
+            {
+                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
+                return NotFound();
+            }
+
+            _mapper.Map(model, entity);
+
+            await _mediator.Send(new UpdateCommandModel<TEntity>
+            {
+                Entity = entity
+            }, cancellationToken);
+
+            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+
+            var entityDto = _mapper.Map<TDto>(entity);
+
+            return Ok(entityDto);
+        }
+
+        /// <summary>
         /// Patch
         /// </summary>
         /// <param name="id"></param>
@@ -160,7 +198,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        public virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patch, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patch, CancellationToken cancellationToken)
             where TPatch : class, new()
         {
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
@@ -170,14 +208,14 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
+                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
                 return NotFound();
             }
-            
+
             var entityCopy = _mapper.Map<TPatch>(entity);
             patch.ApplyTo(entityCopy);
             _mapper.Map(entityCopy, entity);
-            
+
             await _mediator.Send(new UpdateCommandModel<TEntity>
             {
                 Entity = entity,
@@ -199,7 +237,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        public virtual async Task<IActionResult> DeleteAsync<TEntity>(Guid id, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> DeleteAsync<TEntity>(Guid id, CancellationToken cancellationToken)
         {
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>
             {
@@ -208,7 +246,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{EntityName} not found | id: {Id}", nameof(TEntity), id);
+                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
                 return NotFound();
             }
 
