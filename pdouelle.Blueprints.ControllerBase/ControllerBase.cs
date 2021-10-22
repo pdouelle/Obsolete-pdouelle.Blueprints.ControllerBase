@@ -51,6 +51,8 @@ namespace pdouelle.Blueprints.ControllerBase
             where TEntity : IEntity
             where TQueryList : IPagination, ISort
         {
+            Guard.Against.Null(request, nameof(request));
+            
             PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>(request), cancellationToken);
             
             var metadata = new
@@ -85,7 +87,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
                 return NotFound();
             }
 
@@ -106,11 +108,13 @@ namespace pdouelle.Blueprints.ControllerBase
         protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle request, CancellationToken cancellationToken)
             where TQuerySingle : IEntity
         {
+            Guard.Against.Null(request, nameof(request));
+            
             TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>(request), cancellationToken);
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(request.Id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(request.Id), request.Id));
                 return NotFound();
             }
 
@@ -128,6 +132,8 @@ namespace pdouelle.Blueprints.ControllerBase
         protected virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
             where TDto : IEntity
         {
+            Guard.Against.Null(model, nameof(model));
+            
             var request = _mapper.Map<TEntity>(model);
 
             TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>(request), cancellationToken);
@@ -151,11 +157,13 @@ namespace pdouelle.Blueprints.ControllerBase
         [NonAction]
         protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken)
         {
+            Guard.Against.Null(model, nameof(model));
+
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
                 return NotFound();
             }
 
@@ -180,19 +188,21 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> patch, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
             where TPatch : class, new()
         {
+            Guard.Against.Null(model, nameof(model));
+            
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
                 return NotFound();
             }
 
             var entityCopy = _mapper.Map<TPatch>(entity);
-            patch.ApplyTo(entityCopy);
+            model.ApplyTo(entityCopy);
             _mapper.Map(entityCopy, entity);
 
             await _mediator.Send(new UpdateCommandModel<TEntity>(entity), cancellationToken);
@@ -219,7 +229,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new EntityNotFound(id, typeof(TEntity)));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
                 return NotFound();
             }
 
