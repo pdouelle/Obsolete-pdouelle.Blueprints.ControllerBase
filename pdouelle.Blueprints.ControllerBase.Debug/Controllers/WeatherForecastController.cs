@@ -29,12 +29,16 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        private ILogger<WeatherForecastController> _logger;
+        
         public WeatherForecastController(IMediator mediator, IMapper mapper, ILogger<WeatherForecastController> logger, IModelValidation model) : base(mediator, mapper, logger, model)
         {
             Guard.Against.Null(mediator, nameof(mediator));
             Guard.Against.Null(mapper, nameof(mapper));
             Guard.Against.Null(logger, nameof(logger));
             Guard.Against.Null(model, nameof(model));
+            
+            _logger = logger;
         }
 
         [HttpGet]

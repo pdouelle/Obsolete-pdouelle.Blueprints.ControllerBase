@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace pdouelle.Blueprints.ControllerBase.Errors
 {
@@ -16,6 +17,10 @@ namespace pdouelle.Blueprints.ControllerBase.Errors
         }
         
         public ResourceNotFound(MemberInfo type, string propertyName, object value) : this(type, propertyName, value.ToString())
+        {
+        }
+        
+        public ResourceNotFound(MemberInfo type, object value) : this(type, "multiple properties", JsonConvert.SerializeObject(value))
         {
         }
     }
