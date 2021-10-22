@@ -7,7 +7,6 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Model
     {
         public DateTime Date { get; set; }
         public int TemperatureC { get; set; }
-        [Exists]
         public int TemperatureF { get; set; }
         public string Summary { get; set; }
     }

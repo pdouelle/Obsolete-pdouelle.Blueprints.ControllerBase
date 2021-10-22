@@ -110,7 +110,6 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
         protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle request, CancellationToken cancellationToken)
-            where TQuerySingle : IEntity
         {
             Guard.Against.Null(request, nameof(request));
             
@@ -118,7 +117,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             if (entity is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(request.Id), request.Id));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), request));
                 return NotFound();
             }
 
@@ -169,7 +168,7 @@ namespace pdouelle.Blueprints.ControllerBase
             where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
-            
+
             ModelState modelState = await _model.IsValid<TEntity, TUpdate, TSingleQuery>(model, cancellationToken);
 
             if (modelState.HasError()) 
