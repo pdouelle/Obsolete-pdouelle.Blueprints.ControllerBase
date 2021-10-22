@@ -13,6 +13,7 @@ using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Entities;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Commands.CreateChildEntity;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Commands.PatchChildEntity;
+using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Queries.GetChildEntitySingle;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Entities;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.CreateWeatherForecast;
@@ -20,6 +21,7 @@ using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Co
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.UpdateWeatherForecast;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastList;
 using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle;
+using pdouelle.Blueprints.ControllerBase.ModelValidations;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
 {
@@ -27,11 +29,12 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        public WeatherForecastController(IMediator mediator, IMapper mapper, ILogger<WeatherForecastController> logger) : base(mediator, mapper, logger)
+        public WeatherForecastController(IMediator mediator, IMapper mapper, ILogger<WeatherForecastController> logger, IModelValidation model) : base(mediator, mapper, logger, model)
         {
             Guard.Against.Null(mediator, nameof(mediator));
             Guard.Against.Null(mapper, nameof(mapper));
             Guard.Against.Null(logger, nameof(logger));
+            Guard.Against.Null(model, nameof(model));
         }
 
         [HttpGet]
@@ -50,19 +53,19 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
         [HttpPost]
         public async Task<IActionResult> PostAsync([FromBody] CreateWeatherForecastCommandModel model, CancellationToken cancellationToken)
         {
-            return await base.PostAsync<WeatherForecast, WeatherForecastDto, CreateWeatherForecastCommandModel>(model, cancellationToken);
+            return await base.PostAsync<WeatherForecast, WeatherForecastDto, CreateWeatherForecastCommandModel, GetWeatherForecastSingleQueryModel>(model, cancellationToken);
         }
         
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAsync(Guid id, [FromBody] UpdateWeatherForecastCommandModel model, CancellationToken cancellationToken)
         {
-            return await base.PutAsync<WeatherForecast, WeatherForecastDto, UpdateWeatherForecastCommandModel>(id, model, cancellationToken);
+            return await base.PutAsync<WeatherForecast, WeatherForecastDto, UpdateWeatherForecastCommandModel, GetWeatherForecastSingleQueryModel>(id, model, cancellationToken);
         }
 
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchAsync(Guid id, [FromBody] JsonPatchDocument<PatchWeatherForecastCommandModel> patch, CancellationToken cancellationToken)
         {
-            return await base.PatchAsync<WeatherForecast, WeatherForecastDto, PatchWeatherForecastCommandModel>(id, patch, cancellationToken);
+            return await base.PatchAsync<WeatherForecast, WeatherForecastDto, PatchWeatherForecastCommandModel, GetWeatherForecastSingleQueryModel>(id, patch, cancellationToken);
         }
 
         [HttpDelete("{id}")]
@@ -76,13 +79,13 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
         {
             model.WeatherForecastId = id;
             
-            return await base.PostAsync<ChildEntity, ChildEntityDto, CreateChildEntityCommandModel>(model, cancellationToken);
+            return await base.PostAsync<ChildEntity, ChildEntityDto, CreateChildEntityCommandModel, GetChildEntitySingleQueryModel>(model, cancellationToken);
         }
 
         [HttpPatch("{parentId}/childEntities/{id}")]
         public async Task<IActionResult> PatchRelationshipAsync(Guid parentId, Guid id, JsonPatchDocument<PatchChildEntityCommandModel> patch, CancellationToken cancellationToken)
         {
-            return await base.PatchAsync<ChildEntity, ChildEntityDto, PatchChildEntityCommandModel>(id, patch, cancellationToken);
+            return await base.PatchAsync<ChildEntity, ChildEntityDto, PatchChildEntityCommandModel, GetWeatherForecastSingleQueryModel>(id, patch, cancellationToken);
         }
 
         [HttpDelete("{parentId}/childEntities/{id}")]

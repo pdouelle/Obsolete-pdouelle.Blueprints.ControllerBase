@@ -9,5 +9,9 @@ namespace pdouelle.Blueprints.ControllerBase.Errors
             Title = $"Another resource with the specified {propertyName} already exists.";
             Detail = $"Another resource of type '{type.Name}' with {propertyName} '{value}' already exists.";
         }
+        
+        public ResourceAlreadyExists(MemberInfo type, string propertyName, object value) : this(type, propertyName, value.ToString())
+        {
+        }
     }
 }

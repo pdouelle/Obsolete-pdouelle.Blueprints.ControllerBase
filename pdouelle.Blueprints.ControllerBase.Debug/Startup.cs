@@ -37,6 +37,7 @@ namespace pdouelle.Blueprints.ControllerBase.Debug
             services.AddMediatR(typeof(Startup).Assembly);
             services.AddBlueprintMediatR(typeof(Startup).Assembly);
             services.AddAutoMapper(typeof(Startup).Assembly);
+            services.AddModelValidation();
             
             services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("Database"));
             

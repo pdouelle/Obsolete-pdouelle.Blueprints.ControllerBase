@@ -14,5 +14,9 @@ namespace pdouelle.Blueprints.ControllerBase.Errors
         public ResourceNotFound(MemberInfo type, string propertyName, Guid value) : this(type, propertyName, value.ToString())
         {
         }
+        
+        public ResourceNotFound(MemberInfo type, string propertyName, object value) : this(type, propertyName, value.ToString())
+        {
+        }
     }
 }

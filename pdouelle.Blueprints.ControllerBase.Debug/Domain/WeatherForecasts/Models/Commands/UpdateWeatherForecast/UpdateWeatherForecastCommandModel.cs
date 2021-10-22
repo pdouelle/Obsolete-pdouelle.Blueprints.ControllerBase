@@ -1,4 +1,5 @@
 using System;
+using pdouelle.Blueprints.ControllerBase.ModelValidations.Attributes;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.UpdateWeatherForecast
 {
@@ -6,6 +7,7 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Model
     {
         public DateTime Date { get; set; }
         public int TemperatureC { get; set; }
+        [Exists]
         public int TemperatureF { get; set; }
         public string Summary { get; set; }
     }

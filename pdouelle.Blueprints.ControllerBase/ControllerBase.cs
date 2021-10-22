@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using pdouelle.Blueprints.ControllerBase.Errors;
+using pdouelle.Blueprints.ControllerBase.ModelValidations;
 using pdouelle.Blueprints.MediatR.Models.Commands.Create;
 using pdouelle.Blueprints.MediatR.Models.Commands.Delete;
 using pdouelle.Blueprints.MediatR.Models.Commands.Save;
@@ -28,17 +29,20 @@ namespace pdouelle.Blueprints.ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
-        private readonly ILogger _logger;
+        private readonly ILogger<ControllerBase> _logger;
+        private readonly IModelValidation _model;
 
-        public ControllerBase(IMediator mediator, IMapper mapper, ILogger logger)
+        public ControllerBase(IMediator mediator, IMapper mapper, ILogger<ControllerBase> logger, IModelValidation model)
         {
             Guard.Against.Null(mediator, nameof(mediator));
             Guard.Against.Null(mapper, nameof(mapper));
             Guard.Against.Null(logger, nameof(logger));
+            Guard.Against.Null(model, nameof(model));
 
             _mediator = mediator;
             _mapper = mapper;
             _logger = logger;
+            _model = model;
         }
 
         /// <summary>
@@ -129,10 +133,16 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [NonAction]
-        protected virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
-            where TDto : IEntity
+        protected virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate, TSingleQuery>([FromBody] TCreate model, CancellationToken cancellationToken)
+            where TDto : IEntity 
+            where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
+            
+            ModelState modelState = await _model.IsValid<TEntity, TCreate, TSingleQuery>(model, cancellationToken);
+
+            if (modelState.HasError()) 
+                return modelState.Error;
             
             var request = _mapper.Map<TEntity>(model);
 
@@ -155,9 +165,15 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate, TSingleQuery>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken) 
+            where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
+            
+            ModelState modelState = await _model.IsValid<TEntity, TUpdate, TSingleQuery>(model, cancellationToken);
+
+            if (modelState.HasError()) 
+                return modelState.Error;
 
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
@@ -182,16 +198,24 @@ namespace pdouelle.Blueprints.ControllerBase
         /// Patch
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="patch"></param>
+        /// <param name="model"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
-            where TPatch : class, new()
+        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch, TSingleQuery>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
+            where TPatch : class, new() 
+            where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
+
+            var  modelToValidate = new TPatch();
+            model.ApplyTo(modelToValidate);
+            ModelState modelState = await _model.IsValid<TEntity, TPatch, TSingleQuery>(modelToValidate, cancellationToken);
+            
+            if (modelState.HasError()) 
+                return modelState.Error;
             
             TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
 
