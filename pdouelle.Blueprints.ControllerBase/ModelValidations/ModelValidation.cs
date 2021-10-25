@@ -81,9 +81,6 @@ namespace pdouelle.Blueprints.ControllerBase.ModelValidations
             Guard.Against.Null(value, nameof(value));
             Guard.Against.Null(attribute, nameof(attribute));
 
-            const bool isExists = true;
-            const bool isNotExists = false;
-
             Type queryModelType = attribute.QueryType;
 
             PropertyInfo propertyInfo = GetProperty(queryModelType, property, attribute);
