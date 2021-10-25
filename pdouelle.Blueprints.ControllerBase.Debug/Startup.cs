@@ -12,9 +12,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Entities;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Entities;
 using pdouelle.Blueprints.MediatR;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Entities;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug
 {
@@ -34,9 +34,9 @@ namespace pdouelle.Blueprints.ControllerBase.Debug
             
             services.AddControllers().AddNewtonsoftJson();
 
-            services.AddMediatR(typeof(Startup).Assembly);
-            services.AddBlueprintMediatR(typeof(Startup).Assembly);
-            services.AddAutoMapper(typeof(Startup).Assembly);
+            services.AddMediatR(typeof(Startup).Assembly, typeof(WeatherForecast).Assembly);
+            services.AddBlueprintMediatR(typeof(Startup).Assembly, typeof(WeatherForecast).Assembly);
+            services.AddAutoMapper(typeof(Startup).Assembly, typeof(WeatherForecast).Assembly);
             services.AddModelValidation();
             
             services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("Database"));
@@ -85,26 +85,25 @@ namespace pdouelle.Blueprints.ControllerBase.Debug
             {
                 var fixture = new Fixture();
 
+                // WeatherForecasts
                 var weatherForecast = new WeatherForecast
                 {
+                    Id = new Guid("5ba3ac72-6c06-4b3a-8864-50094bb17000"),
                     Date = fixture.Create<DateTime>(),
                     Summary = fixture.Create<string>(),
                     TemperatureC = fixture.Create<int>(),
                     TemperatureF = fixture.Create<int>(),
                 };
-                
                 context.WeatherForecasts.Add(weatherForecast);
-                
                 context.SaveChanges();
 
+                // Child entities
                 var childEntity = new ChildEntity
                 {
                     WeatherForecastId = weatherForecast.Id,
                     Name = fixture.Create<string>()
                 };
-                
                 context.ChildEntities.Add(childEntity);
-                
                 context.SaveChanges();
             }
         }

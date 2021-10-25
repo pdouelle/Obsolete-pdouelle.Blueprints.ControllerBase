@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Entities;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Entities;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Entities;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug
 {

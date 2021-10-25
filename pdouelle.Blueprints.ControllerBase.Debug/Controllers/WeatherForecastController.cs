@@ -9,19 +9,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Entities;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Commands.CreateChildEntity;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Commands.PatchChildEntity;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.ChildEntities.Models.Queries.GetChildEntitySingle;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Entities;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.CreateWeatherForecast;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.PatchWeatherForecast;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Commands.UpdateWeatherForecast;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastList;
-using pdouelle.Blueprints.ControllerBase.Debug.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle;
 using pdouelle.Blueprints.ControllerBase.ModelValidations;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Entities;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Models;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Models.Commands.CreateChildEntity;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Models.Commands.PatchChildEntity;
+using pdouelleBlueprints.ControllerBase.Domain.ChildEntities.Models.Queries.GetChildEntitySingle;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Commands.CreateWeatherForecast;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Commands.PatchWeatherForecast;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Commands.UpdateWeatherForecast;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastList;
+using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle;
 
 namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
 {
@@ -29,7 +29,8 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private ILogger<WeatherForecastController> _logger;
+        private readonly ILogger<WeatherForecastController> _logger;
+        private readonly IMediator _mediator;
         
         public WeatherForecastController(IMediator mediator, IMapper mapper, ILogger<WeatherForecastController> logger, IModelValidation model) : base(mediator, mapper, logger, model)
         {
@@ -37,7 +38,8 @@ namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
             Guard.Against.Null(mapper, nameof(mapper));
             Guard.Against.Null(logger, nameof(logger));
             Guard.Against.Null(model, nameof(model));
-            
+
+            _mediator = mediator;
             _logger = logger;
         }
 

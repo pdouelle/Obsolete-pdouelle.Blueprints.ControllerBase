@@ -51,29 +51,29 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [NonAction]
-        protected virtual async Task<IActionResult> GetAsync<TEntity, TDto, TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken)
-            where TEntity : IEntity
+        protected virtual async Task<IActionResult> GetAsync<TResource, TDto, TQueryList>([FromQuery] TQueryList request, CancellationToken cancellationToken)
+            where TResource : IEntity
             where TQueryList : IPagination, ISort
         {
             Guard.Against.Null(request, nameof(request));
             
-            PagedList<TEntity> entities = await _mediator.Send(new ListQueryModel<TEntity, TQueryList>(request), cancellationToken);
+            PagedList<TResource> resources = await _mediator.Send(new ListQueryModel<TResource, TQueryList>(request), cancellationToken);
             
             var metadata = new
             {
-                entities.TotalCount,
-                entities.PageSize,
-                entities.CurrentPage,
-                entities.TotalPages,
-                entities.HasNext,
-                entities.HasPrevious
+                resources.TotalCount,
+                resources.PageSize,
+                resources.CurrentPage,
+                resources.TotalPages,
+                resources.HasNext,
+                resources.HasPrevious
             };
 
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
 
-            var entitiesDto = _mapper.Map<IEnumerable<TDto>>(entities);
+            var dto = _mapper.Map<IEnumerable<TDto>>(resources);
 
-            return Ok(entitiesDto);
+            return Ok(dto);
         }
 
         /// <summary>
@@ -85,19 +85,19 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> GetByIdAsync<TEntity, TDto>(Guid id, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> GetByIdAsync<TResource, TDto>(Guid id, CancellationToken cancellationToken)
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
+            TResource resource = await _mediator.Send(new IdQueryModel<TResource>(id), cancellationToken);
 
-            if (entity is null)
+            if (resource is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), nameof(id), id));
                 return NotFound();
             }
 
-            var entityDto = _mapper.Map<TDto>(entity);
+            var dto = _mapper.Map<TDto>(resource);
 
-            return Ok(entityDto);
+            return Ok(dto);
         }
 
         /// <summary>
@@ -109,21 +109,21 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> GetSingleAsync<TEntity, TDto, TQuerySingle>([FromBody] TQuerySingle request, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> GetSingleAsync<TResource, TDto, TQuerySingle>([FromQuery] TQuerySingle request, CancellationToken cancellationToken)
         {
             Guard.Against.Null(request, nameof(request));
             
-            TEntity entity = await _mediator.Send(new SingleQueryModel<TEntity, TQuerySingle>(request), cancellationToken);
+            TResource resource = await _mediator.Send(new SingleQueryModel<TResource, TQuerySingle>(request), cancellationToken);
 
-            if (entity is null)
+            if (resource is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), request));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), request));
                 return NotFound();
             }
 
-            var entityDto = _mapper.Map<TDto>(entity);
+            var dto = _mapper.Map<TDto>(resource);
 
-            return Ok(entityDto);
+            return Ok(dto);
         }
 
         /// <summary>
@@ -132,26 +132,26 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [NonAction]
-        protected virtual async Task<IActionResult> PostAsync<TEntity, TDto, TCreate, TSingleQuery>([FromBody] TCreate model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PostAsync<TResource, TDto, TCreate, TSingleQuery>([FromBody] TCreate model, CancellationToken cancellationToken)
             where TDto : IEntity 
             where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
             
-            ModelState modelState = await _model.IsValid<TEntity, TCreate, TSingleQuery>(model, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TCreate, TSingleQuery>(model, cancellationToken);
 
             if (modelState.HasError()) 
                 return modelState.Error;
             
-            var request = _mapper.Map<TEntity>(model);
+            var request = _mapper.Map<TResource>(model);
 
-            TEntity entity = await _mediator.Send(new CreateCommandModel<TEntity>(request), cancellationToken);
+            TResource resource = await _mediator.Send(new CreateCommandModel<TResource>(request), cancellationToken);
 
-            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TResource>(), cancellationToken);
 
-            var entityDto = _mapper.Map<TDto>(entity);
+            var dto = _mapper.Map<TDto>(resource);
 
-            return Created($"{HttpContext.Request.Path}/{entityDto.Id}", entityDto);
+            return Created($"{HttpContext.Request.Path}/{dto.Id}", dto);
         }
 
         /// <summary>
@@ -164,33 +164,33 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PutAsync<TEntity, TDto, TUpdate, TSingleQuery>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken) 
+        protected virtual async Task<IActionResult> PutAsync<TResource, TDto, TUpdate, TSingleQuery>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken) 
             where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
 
-            ModelState modelState = await _model.IsValid<TEntity, TUpdate, TSingleQuery>(model, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TUpdate, TSingleQuery>(model, cancellationToken);
 
             if (modelState.HasError()) 
                 return modelState.Error;
 
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
+            TResource resource = await _mediator.Send(new IdQueryModel<TResource>(id), cancellationToken);
 
-            if (entity is null)
+            if (resource is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), nameof(id), id));
                 return NotFound();
             }
 
-            _mapper.Map(model, entity);
+            _mapper.Map(model, resource);
 
-            await _mediator.Send(new UpdateCommandModel<TEntity>(entity), cancellationToken);
+            await _mediator.Send(new UpdateCommandModel<TResource>(resource), cancellationToken);
 
-            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TResource>(), cancellationToken);
 
-            var entityDto = _mapper.Map<TDto>(entity);
+            var dto = _mapper.Map<TDto>(resource);
 
-            return Ok(entityDto);
+            return Ok(dto);
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PatchAsync<TEntity, TDto, TPatch, TSingleQuery>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PatchAsync<TResource, TDto, TPatch, TSingleQuery>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
             where TPatch : class, new() 
             where TSingleQuery : new()
         {
@@ -211,30 +211,30 @@ namespace pdouelle.Blueprints.ControllerBase
 
             var  modelToValidate = new TPatch();
             model.ApplyTo(modelToValidate);
-            ModelState modelState = await _model.IsValid<TEntity, TPatch, TSingleQuery>(modelToValidate, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TPatch, TSingleQuery>(modelToValidate, cancellationToken);
             
             if (modelState.HasError()) 
                 return modelState.Error;
             
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
+            TResource resource = await _mediator.Send(new IdQueryModel<TResource>(id), cancellationToken);
 
-            if (entity is null)
+            if (resource is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), nameof(id), id));
                 return NotFound();
             }
 
-            var entityCopy = _mapper.Map<TPatch>(entity);
-            model.ApplyTo(entityCopy);
-            _mapper.Map(entityCopy, entity);
+            var resourceCopy = _mapper.Map<TPatch>(resource);
+            model.ApplyTo(resourceCopy);
+            _mapper.Map(resourceCopy, resource);
 
-            await _mediator.Send(new UpdateCommandModel<TEntity>(entity), cancellationToken);
+            await _mediator.Send(new UpdateCommandModel<TResource>(resource), cancellationToken);
 
-            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TResource>(), cancellationToken);
 
-            var entityDto = _mapper.Map<TDto>(entity);
+            var dto = _mapper.Map<TDto>(resource);
 
-            return Ok(entityDto);
+            return Ok(dto);
         }
 
         /// <summary>
@@ -246,19 +246,19 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> DeleteAsync<TEntity>(Guid id, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> DeleteAsync<TResource>(Guid id, CancellationToken cancellationToken)
         {
-            TEntity entity = await _mediator.Send(new IdQueryModel<TEntity>(id), cancellationToken);
+            TResource resource = await _mediator.Send(new IdQueryModel<TResource>(id), cancellationToken);
 
-            if (entity is null)
+            if (resource is null)
             {
-                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TEntity), nameof(id), id));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), nameof(id), id));
                 return NotFound();
             }
 
-            await _mediator.Send(new DeleteCommandModel<TEntity>(entity), cancellationToken);
+            await _mediator.Send(new DeleteCommandModel<TResource>(resource), cancellationToken);
 
-            await _mediator.Send(new SaveCommandModel<TEntity>(), cancellationToken);
+            await _mediator.Send(new SaveCommandModel<TResource>(), cancellationToken);
 
             return NoContent();
         }
