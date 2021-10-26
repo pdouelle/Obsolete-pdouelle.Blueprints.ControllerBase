@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using pdouelle.Blueprints.ControllerBase.Errors;
 using pdouelle.Blueprints.ControllerBase.ModelValidations;
 using pdouelle.Blueprints.MediatR.Models.Commands.Create;
 using pdouelle.Blueprints.MediatR.Models.Commands.Delete;
@@ -20,6 +19,7 @@ using pdouelle.Blueprints.MediatR.Models.Queries.IdQuery;
 using pdouelle.Blueprints.MediatR.Models.Queries.ListQuery;
 using pdouelle.Blueprints.MediatR.Models.Queries.SingleQuery;
 using pdouelle.Entity;
+using pdouelle.Errors;
 using pdouelle.Pagination;
 using pdouelle.Sort;
 
@@ -132,13 +132,12 @@ namespace pdouelle.Blueprints.ControllerBase
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [NonAction]
-        protected virtual async Task<IActionResult> PostAsync<TResource, TDto, TCreate, TSingleQuery>([FromBody] TCreate model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PostAsync<TResource, TDto, TCreate>([FromBody] TCreate model, CancellationToken cancellationToken)
             where TDto : IEntity 
-            where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
             
-            ModelState modelState = await _model.IsValid<TResource, TCreate, TSingleQuery>(model, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TCreate>(model, cancellationToken);
 
             if (modelState.HasError()) 
                 return modelState.Error;
@@ -164,12 +163,11 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PutAsync<TResource, TDto, TUpdate, TSingleQuery>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken) 
-            where TSingleQuery : new()
+        protected virtual async Task<IActionResult> PutAsync<TResource, TDto, TUpdate>(Guid id, [FromBody] TUpdate model, CancellationToken cancellationToken) 
         {
             Guard.Against.Null(model, nameof(model));
 
-            ModelState modelState = await _model.IsValid<TResource, TUpdate, TSingleQuery>(model, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TUpdate>(model, cancellationToken);
 
             if (modelState.HasError()) 
                 return modelState.Error;
@@ -203,15 +201,14 @@ namespace pdouelle.Blueprints.ControllerBase
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
-        protected virtual async Task<IActionResult> PatchAsync<TResource, TDto, TPatch, TSingleQuery>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PatchAsync<TResource, TDto, TPatch>(Guid id, [FromBody] JsonPatchDocument<TPatch> model, CancellationToken cancellationToken)
             where TPatch : class, new() 
-            where TSingleQuery : new()
         {
             Guard.Against.Null(model, nameof(model));
 
             var  modelToValidate = new TPatch();
             model.ApplyTo(modelToValidate);
-            ModelState modelState = await _model.IsValid<TResource, TPatch, TSingleQuery>(modelToValidate, cancellationToken);
+            ModelState modelState = await _model.IsValid<TResource, TPatch>(modelToValidate, cancellationToken);
             
             if (modelState.HasError()) 
                 return modelState.Error;

@@ -5,7 +5,6 @@ namespace pdouelle.Blueprints.ControllerBase.ModelValidations
 {
     public interface IModelValidation
     {
-        Task<ModelState> IsValid<TResource, TModel, TQuery>(TModel model, CancellationToken cancellationToken)
-            where TQuery : new();
+        Task<ModelState> IsValid<TResource, TModel>(TModel model, CancellationToken cancellationToken);
     }
 }
