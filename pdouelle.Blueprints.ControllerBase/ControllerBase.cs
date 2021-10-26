@@ -150,7 +150,7 @@ namespace pdouelle.Blueprints.ControllerBase
 
             var dto = _mapper.Map<TDto>(resource);
 
-            return Created($"{HttpContext.Request.Path}/{dto.Id}", dto);
+            return Created($"{HttpContext?.Request.Path}/{dto.Id}", dto);
         }
 
         /// <summary>
