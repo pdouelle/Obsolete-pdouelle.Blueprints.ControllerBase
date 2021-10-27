@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <PackageId>pdouelle.Blueprints.ControllerBase</PackageId>
-        <Version>5.0.8</Version>
+        <Version>5.0.9</Version>
         <Authors>Philippe DOUELLE</Authors>
         <Company>BETTERIT</Company>
         <RootNamespace>pdouelle.Blueprints.ControllerBase</RootNamespace>

@@ -23,22 +23,17 @@ using pdouelle.Errors;
 using pdouelle.Pagination;
 using pdouelle.Sort;
 
-namespace pdouelle.Blueprints.ControllerBase
+namespace pdouelle.Blueprints.ControllerBase.Controllers
 {
-    public class ControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
+    public class BlueprintControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
-        private readonly ILogger<ControllerBase> _logger;
+        private readonly ILogger<BlueprintControllerBase> _logger;
         private readonly IModelValidation _model;
 
-        public ControllerBase(IMediator mediator, IMapper mapper, ILogger<ControllerBase> logger, IModelValidation model)
+        public BlueprintControllerBase(IMediator mediator, IMapper mapper, ILogger<BlueprintControllerBase> logger, IModelValidation model)
         {
-            Guard.Against.Null(mediator, nameof(mediator));
-            Guard.Against.Null(mapper, nameof(mapper));
-            Guard.Against.Null(logger, nameof(logger));
-            Guard.Against.Null(model, nameof(model));
-
             _mediator = mediator;
             _mapper = mapper;
             _logger = logger;
