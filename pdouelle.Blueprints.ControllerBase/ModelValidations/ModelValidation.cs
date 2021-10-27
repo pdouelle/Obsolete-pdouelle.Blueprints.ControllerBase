@@ -44,10 +44,11 @@ namespace pdouelle.Blueprints.ControllerBase.ModelValidations
                     if (attribute is ExistsAttribute existsAttribute)
                     {
                         var propertyNotExists = await IsExisting(property, existsAttribute, propertyValue, cancellationToken) != true;
+                        
 
                         if (propertyNotExists)
                         {
-                            _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TResource), property.Name, propertyValue));
+                            _logger.LogInformation("{@Message}", new ResourceNotFound(existsAttribute.Resource, property.Name, propertyValue));
                             return new ModelState(new UnprocessableEntityResult());
                         }
                     }
@@ -59,7 +60,7 @@ namespace pdouelle.Blueprints.ControllerBase.ModelValidations
 
                         if (propertyExists)
                         {
-                            _logger.LogInformation("{@Message}", new ResourceAlreadyExists(typeof(TResource), property.Name, propertyValue));
+                            _logger.LogInformation("{@Message}", new ResourceAlreadyExists(uniqueAttribute.Resource, property.Name, propertyValue));
                             return new ModelState(new ConflictResult());
                         }
                     }
