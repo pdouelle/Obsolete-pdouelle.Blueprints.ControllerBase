@@ -283,17 +283,15 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         [NonAction]
-        protected virtual async Task<IActionResult> PostRelationshipAsync<TResource, TDto, TCreate, TQuerySingle>
-            (Guid id, TCreate model, TQuerySingle query, CancellationToken cancellationToken)
+        protected virtual async Task<IActionResult> PostRelationshipAsync<TResource, TDto, TCreate, TParentResource>
+            (TCreate model, Guid parentId, CancellationToken cancellationToken)
             where TDto : IEntity
         {
-            Guard.Against.Null(query, nameof(query));
+            TParentResource parentResource = await _mediator.Send(new IdQueryModel<TParentResource>(parentId), cancellationToken);
 
-            TResource relationShip = await _mediator.Send(new SingleQueryModel<TResource, TQuerySingle>(query), cancellationToken);
-
-            if (relationShip is null)
+            if (parentResource is null)
             {
-                _logger.LogInformation("{@Message}", new RelationshipNotFound(typeof(TResource), query));
+                _logger.LogInformation("{@Message}", new ResourceNotFound(typeof(TParentResource), nameof(parentId), parentId));
                 return NotFound();
             }
 
