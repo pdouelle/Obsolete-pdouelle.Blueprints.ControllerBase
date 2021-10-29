@@ -1,15 +1,15 @@
-﻿using pdouelle.LinqExtensions.Attributes;
+﻿using System.Collections.Generic;
+using pdouelle.LinqExtensions.Attributes;
+using pdouelle.LinqExtensions.Interfaces;
 using pdouelle.QueryStringParameters;
-using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
 
 namespace pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastList
 {
-    public class GetWeatherForecastListQueryModel : QueryStringPaginationSort
+    public class GetWeatherForecastListQueryModel : QueryStringPaginationSort, IInclude
     {
         [Where]
         public int? TemperatureC { get; set; }
-        
-        [Include(Name = nameof(WeatherForecast.ChildEntity))]
-        public bool IncludeChildEntities { get; set; }
+
+        public List<string> Include { get; set; }
     }
 }

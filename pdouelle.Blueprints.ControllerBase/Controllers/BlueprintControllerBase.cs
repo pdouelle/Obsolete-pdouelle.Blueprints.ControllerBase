@@ -20,6 +20,7 @@ using pdouelle.Blueprints.MediatR.Models.Queries.ListQuery;
 using pdouelle.Blueprints.MediatR.Models.Queries.SingleQuery;
 using pdouelle.Entity;
 using pdouelle.Errors;
+using pdouelle.LinqExtensions.Interfaces;
 using pdouelle.Pagination;
 using pdouelle.Sort;
 
@@ -55,7 +56,7 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
         protected virtual async Task<IActionResult> GetAsync<TResource, TDto, TQueryList>
             ([FromQuery] TQueryList request, CancellationToken cancellationToken)
             where TResource : IEntity
-            where TQueryList : IPagination, ISort
+            where TQueryList : IPagination, ISort, IInclude
         {
             Guard.Against.Null(request, nameof(request));
 
@@ -113,7 +114,8 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
         protected virtual async Task<IActionResult> GetSingleAsync<TResource, TDto, TQuerySingle>
-            ([FromQuery] TQuerySingle request, CancellationToken cancellationToken)
+            ([FromQuery] TQuerySingle request, CancellationToken cancellationToken) 
+            where TQuerySingle : IInclude
         {
             Guard.Against.Null(request, nameof(request));
 
@@ -314,7 +316,8 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
         [NonAction]
         protected virtual async Task<IActionResult> PatchRelationshipAsync<TResource, TDto, TPatch, TQuerySingle>
             (Guid id, JsonPatchDocument<TPatch> model, TQuerySingle query, CancellationToken cancellationToken)
-            where TPatch : class, new()
+            where TPatch : class, new() 
+            where TQuerySingle : IInclude
         {
             Guard.Against.Null(query, nameof(query));
 
@@ -340,7 +343,8 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [NonAction]
         protected virtual async Task<IActionResult> DeleteRelationshipAsync<TResource, TQuerySingle>
-            (Guid id, TQuerySingle query, CancellationToken cancellationToken)
+            (Guid id, TQuerySingle query, CancellationToken cancellationToken) 
+            where TQuerySingle : IInclude
         {
             Guard.Against.Null(query, nameof(query));
 

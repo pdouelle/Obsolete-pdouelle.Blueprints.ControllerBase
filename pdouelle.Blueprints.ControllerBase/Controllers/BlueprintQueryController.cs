@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using pdouelle.Blueprints.ControllerBase.ModelValidations;
 using pdouelle.Entity;
+using pdouelle.LinqExtensions.Interfaces;
 using pdouelle.Pagination;
 using pdouelle.Sort;
 
@@ -15,7 +16,7 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
 {
     public class BlueprintQueryController<TResource, TDto, TQueryList> : BlueprintControllerBase 
         where TResource : IEntity 
-        where TQueryList : IPagination, ISort
+        where TQueryList : IPagination, ISort, IInclude
     {
         public BlueprintQueryController
         (

@@ -31,7 +31,7 @@ namespace pdouelle.Blueprints.ControllerBase.ModelValidations
         {
             Guard.Against.Null(model, nameof(model));
 
-            PropertyInfo[] properties = model.GetType().GetProperties();
+            PropertyInfo[] properties = typeof(TModel).GetProperties();
 
             foreach (PropertyInfo property in properties)
             {

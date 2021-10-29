@@ -19,8 +19,5 @@ namespace pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queri
 
         [Where]
         public string Summary { get; set; }
-        
-        [Include(Name = nameof(WeatherForecast.ChildEntity))]
-        public bool IncludeChildEntities { get; set; }
     }
 }
