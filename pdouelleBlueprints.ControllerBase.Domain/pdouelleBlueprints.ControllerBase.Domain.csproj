@@ -5,8 +5,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="pdouelle.Blueprints.MediatR" Version="5.0.6" />
-      <PackageReference Include="pdouelle.QueryStringParameters" Version="1.0.1" />
+      <PackageReference Include="pdouelle.Blueprints.MediatR" Version="5.0.7" />
+      <PackageReference Include="pdouelle.QueryStringParameters" Version="1.0.2" />
     </ItemGroup>
 
     <ItemGroup>
