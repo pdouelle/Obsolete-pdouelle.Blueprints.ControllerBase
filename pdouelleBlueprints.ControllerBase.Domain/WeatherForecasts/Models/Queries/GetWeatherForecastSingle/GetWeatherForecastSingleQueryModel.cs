@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using pdouelle.LinqExtensions.Attributes;
-using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
+using pdouelle.LinqExtensions.Interfaces;
 
 namespace pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queries.GetWeatherForecastSingle
 {
-    public class GetWeatherForecastSingleQueryModel
+    public class GetWeatherForecastSingleQueryModel : IInclude
     {
         [FromRoute]
         [Where]
@@ -19,5 +20,7 @@ namespace pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queri
 
         [Where]
         public string Summary { get; set; }
+
+        public List<string> Include { get; set; }
     }
 }

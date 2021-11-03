@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using Autofac;
 using AutoFixture;
 using MediatR;
@@ -44,10 +42,6 @@ namespace pdouelle.Blueprints.ControllerBase.Debug
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "pdouelle.Blueprints.ControllerBase.Debug", Version = "v1" });
-                
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                c.IncludeXmlComments(xmlPath);
             });
         }
 

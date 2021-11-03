@@ -1,16 +1,14 @@
 ﻿using System;
-using pdouelle.Blueprints.ControllerBase.ModelValidations.Attributes;
-using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Commands.PatchWeatherForecast
 {
     public class PatchWeatherForecastCommandModel
     {
-        public Guid Id { get; set; }
         public DateTime Date { get; set; }
-        [Exists(typeof(WeatherForecast))]
         public int TemperatureC { get; set; }
         public int TemperatureF { get; set; }
-        public string Summary { get; set; }
+        [Required] public string Summary { get; set; }
+        [Required] public string Coucou { get; set; }
     }
 }

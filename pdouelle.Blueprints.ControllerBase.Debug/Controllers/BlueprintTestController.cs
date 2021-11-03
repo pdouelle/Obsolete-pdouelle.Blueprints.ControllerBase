@@ -13,7 +13,7 @@ using pdouelleBlueprints.ControllerBase.Domain.WeatherForecasts.Models.Queries.G
 namespace pdouelle.Blueprints.ControllerBase.Debug.Controllers
 {
     [ApiController]
-    [Route("api/blueprintTest")]
+    [Route("WeatherForecast")]
     [Produces("application/json")]
     public class BlueprintTestController : BlueprintController
     <

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
@@ -23,9 +25,11 @@ using pdouelle.Errors;
 using pdouelle.LinqExtensions.Interfaces;
 using pdouelle.Pagination;
 using pdouelle.Sort;
+using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 
 namespace pdouelle.Blueprints.ControllerBase.Controllers
 {
+    [ApiController]
     public class BlueprintControllerBase : Microsoft.AspNetCore.Mvc.ControllerBase
     {
         private readonly IMediator _mediator;
@@ -223,6 +227,7 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
 
             var modelToValidate = new TPatch();
             model.ApplyTo(modelToValidate);
+            
             ModelState modelState = await _model.IsValid<TResource, TPatch>(modelToValidate, cancellationToken);
 
             if (modelState.HasError())
@@ -238,6 +243,16 @@ namespace pdouelle.Blueprints.ControllerBase.Controllers
 
             var resourceCopy = _mapper.Map<TPatch>(resource);
             model.ApplyTo(resourceCopy);
+            
+            var context = new ValidationContext(resourceCopy, serviceProvider: null, items: null);
+            var validationResults = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(resourceCopy, context, validationResults, true);
+            if (isValid is false)
+            {
+                _logger.LogInformation("The request model is not valid. For the resource of type {ResourceTypeName}: {ErrorMessage}", typeof(TResource).Name, JsonConvert.SerializeObject(validationResults?.Select(x => x.ErrorMessage)));
+                return BadRequest();
+            }
+            
             _mapper.Map(resourceCopy, resource);
 
             await _mediator.Send(new UpdateCommandModel<TResource>(resource), cancellationToken);
