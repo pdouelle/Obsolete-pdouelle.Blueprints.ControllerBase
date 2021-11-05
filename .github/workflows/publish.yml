@@ -27,8 +27,8 @@ jobs:
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
         # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: "pdouelle.Blueprints.ControllerBase"
+        PROJECT_FILE_PATH: "pdouelle.Blueprints.ControllerBase/pdouelle.Blueprints.ControllerBase.csproj"
         # API key to authenticate with NuGet server
-        NUGET_KEY: # optional
+        NUGET_KEY: ${{secrets.NUGET_KEY}}
         
         
